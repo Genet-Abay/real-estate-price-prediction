@@ -27,6 +27,17 @@ def get_property(url_property):
     except Exception as arg:
             log.exception('problem occured in get_property function while scraping the page')
 
+    
+    required_properties = filter_out_dictionary(all_property_dict)
+    return required_properties
+
+
+###########################################################
+def filter_out_dictionary(all_property_dict):
+    '''
+    This function constructs a dictionary which contains only required information
+     from the original dictionary and returns the new filtered dictionary.
+    '''
     required_properties = {}    
     if len(all_property_dict) > 0:        
         try:            
@@ -34,10 +45,7 @@ def get_property(url_property):
             property_type = properties.get('type')
             if property_type=="APARTMENT" or property_type=="HOUSE":
                 required_properties['ID'] = all_property_dict.get('id')
-                if properties.get(property_type):
-                    required_properties['Type'] = properties.get(property_type)
-                else:
-                    required_properties['Type'] = ""
+                required_properties['Type'] = property_type
 
                 if properties.get('subtype'):
                     required_properties['Sub type'] = properties.get('subtype')
@@ -193,7 +201,7 @@ def get_property(url_property):
                     required_properties['GardenArea'] = ""
                 # required_properties['NumberOfToilets'] = properties.get('specificities').get('toiletCount')
         except Exception as arg:
-            log.exception(f'proplem occure in get_property function while reading property from {url_property}')
+            log.exception(f'proplem occure in filter_out_dictionary function while reading property from {url_property}')
         else: 
             return(required_properties)
 
@@ -262,7 +270,7 @@ def fetch_propertylinks_fromSiteMap():
     with open('C:\BeCode\LocalRepos\documents\sitemapImo.txt', 'r') as f:
         sitemap = f.readline()
         # xml = requests.get(sitemap)
-        xml = open('C:/BeCode/LocalRepos/documents/classifieds-001_part.xml', 'r')
+        xml = open('C:/BeCode/LocalRepos/documents/test_sitemap.xml', 'r')
         soup = BeautifulSoup(xml, features="lxml")
         
         urls = soup.find_all('url')
@@ -280,7 +288,8 @@ def export_dataframe(list_data, file_):
     export the dataframe to the given file
 
     '''
-    df = pd.DataFrame.from_dict(list_data, )
+    df = pd.DataFrame.from_dict(list(filter(None, list_data)))
+ 
     # df.drop_duplicates()
     df.to_csv(file_, index=False)
     print('Properties saved to file')
@@ -298,6 +307,7 @@ def start_gathering_data():
         print("links are successfully read and started to get properties")
         total_list_property = iterate_urls_toget_properties(links)
         if total_list_property and len(total_list_property) > 0: 
+
             print(f' a total of {len(total_list_property)} found and exporting them to a given file')
             export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data2.csv')
         else:
