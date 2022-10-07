@@ -1,177 +1,312 @@
-from gettext import find
+# import itertools
 import json
 import requests
 from bs4 import BeautifulSoup
+import logging as log
+# from selenium import webdriver
+# from selenium.webdriver.common.keys import Keys
 from concurrent.futures import ThreadPoolExecutor
-import re
-from csv import DictWriter
+from usp.tree import sitemap_tree_for_homepage
+import pandas as pd
 
-
-# class Home():
-#     def __init__(self):        
-#         locality = "" 
-#         type_of_property = "House"
-#         subtype_of_property = "" 
-#         price = 0
-#         type_of_sale = ""
-#         number_of_rooms = 0
-#         living_area = 0 #in meter squared
-#         is_fully_equipped_kitchen =  False
-#         is_furnished =  False
-#         is_open_fire = False
-#         has_terrace = False
-#         terrace_area = 0 # only if there is terrace
-#         has_garden = False
-#         garden_are = 0 #if garden is available 
-#         surface_of_the_land = 0 
-#         #surface area of the plot of land 
-#         number_of_facades = 1 
-#         swimming_pool = False 
-#         state_of_the_building = ''# (New, to be renovated, ...)
-
-#     def pass_property(self):
-#         pass
-
-#     def set_property(self):
-#         pass
-
-
+###################################################################
 def get_property(url_property):
-    req = requests.get(url_property)
-    content = req.text
-    soup = BeautifulSoup(content, 'html.parser')
-    
-    scripts = soup.findAll('script', type='text/javascript') 
-    properties = ""
-    for script in scripts:
-        text = script.text
-        if 'window.classified' in text:
-            text = text[text.find('{'): text.rfind(';')]
-            all_property_dict = json.loads(text)
-            break
+    all_property_dict = {}
+    try:
+        req = requests.get(url_property)
+        content = req.text
+        soup = BeautifulSoup(content, 'html.parser')    
+        scripts = soup.findAll('script', type='text/javascript') 
+        properties = ""
+        for script in scripts:
+            text = script.text
+            if 'window.classified' in text:
+                text = text[text.find('{'): text.rfind(';')]
+                all_property_dict = json.loads(text)
+                break
+    except Exception as arg:
+            log.exception('problem occured in get_property function while scraping the page')
 
     required_properties = {}    
-    if len(all_property_dict) > 0:
-        required_properties['ID'] = all_property_dict.get('id')
-        try:
+    if len(all_property_dict) > 0:        
+        try:            
             properties = all_property_dict.get('property')
+            property_type = properties.get('type')
+            if property_type=="APARTMENT" or property_type=="HOUSE":
+                required_properties['ID'] = all_property_dict.get('id')
+                if properties.get(property_type):
+                    required_properties['Type'] = properties.get(property_type)
+                else:
+                    required_properties['Type'] = ""
 
-            required_properties['Type'] = properties.get('type')
-            required_properties['Sub type'] = properties.get('subtype')
-            required_properties['BedroomCount'] = properties.get('bedroomCount')
-            required_properties['BathroomCount'] = properties.get('id')
-            required_properties['Province'] = properties.get('location').get('province')
-            required_properties['Region'] = properties.get('location').get('region')
-            required_properties['PostCode'] = properties.get('location').get('postalCode')
-            required_properties['street'] = properties.get('location').get('street')
-            required_properties['Floor'] = properties.get('location').get('floor')
-            required_properties['RegionCode'] = properties.get('location').get('regionCode')
-            required_properties['IsIsolated'] = properties.get('location').get('type')
-            required_properties['HasSeaView'] = properties.get('location').get('hasSeaView')
-            required_properties['SchoolDistance'] = properties.get('location').get('pointsOfInterest')[0].get('distance')
-            required_properties['TransportDistance'] = properties.get('location').get('pointsOfInterest')[2].get('distance')
+                if properties.get('subtype'):
+                    required_properties['Sub type'] = properties.get('subtype')
+                else:
+                    required_properties['Sub type'] = ""
+                
+                if properties.get('bedroomCount'):
+                    required_properties['BedroomCount'] = properties.get('bedroomCount')
+                else:
+                    required_properties['BedroomCount'] = ""
+                # required_properties['BathroomCount'] = properties.get('id')
+                if properties.get('location'):
+                    if properties.get('location').get('province'):
+                        required_properties['Province'] = properties.get('location').get('province')
+                    else:
+                        required_properties['Province'] = ""
 
-            required_properties['NetHabitableSurface'] = properties.get('netHabitableSurface')
-            required_properties['TotalRoomCount'] = properties.get('roomCount')
-            required_properties['HasAttic'] = properties.get('hasAttic')            
-            required_properties['HasBasement'] = properties.get('hasBasement')
-            required_properties['HasDiningRoom'] = properties.get('hasDiningRoom')
+                    if properties.get('location').get('region'):
+                        required_properties['Region'] = properties.get('location').get('region')
+                    else:
+                        required_properties['Region'] = ""
+                    
+                    if properties.get('location').get('postalCode'):
+                        required_properties['PostCode'] = properties.get('location').get('postalCode')
+                    else:
+                        required_properties['PostCode'] = ""
+                    
+                    if properties.get('location').get('street'):
+                        required_properties['street'] = properties.get('location').get('street')
+                    else:
+                        required_properties['street'] = ""
+                    
+                    if properties.get('location').get('floor'):
+                        required_properties['Floor'] = properties.get('location').get('floor')
+                    else:
+                        required_properties['Floor'] = ""
+                    
+                    if properties.get('location').get('regionCode'):
+                        required_properties['RegionCode'] = properties.get('location').get('regionCode')
+                    else:
+                        required_properties['RegionCode'] = ""
 
-            required_properties['BuildingCondition'] = properties.get('building').get('condition')
-            required_properties['ConstructionYear'] = properties.get('building').get('constructionYear')
-            required_properties['FacadeCount'] = properties.get('building').get('facadeCount')
+                    if properties.get('location').get('type'):
+                        required_properties['IsIsolated'] = properties.get('location').get('type')
+                    else:
+                        required_properties['IsIsolated'] = ""
 
-            required_properties['HasLift'] = properties.get('hasLift')
+                    if properties.get('location').get('hasSeaView'):
+                        required_properties['HasSeaView'] = properties.get('location').get('hasSeaView')
+                    else:
+                        required_properties['HasSeaView'] = ""
 
-            required_properties['FloodZoneType'] = properties.get('constructionPermit').get('floodZoneType')
+                    if properties.get('location').get('pointsOfInterest'):
+                        if properties.get('location').get('pointsOfInterest')[0].get('distance'):
+                            required_properties['SchoolDistance'] = properties.get('location').get('pointsOfInterest')[0].get('distance')
+                        else:
+                            required_properties['SchoolDistance'] = ""
 
-            required_properties['HeatingType'] = properties.get('energy').get('heatingType')    
-            required_properties['IsDoubleGlaze'] = properties.get('energy').get('hasDoubleGlazing') 
+                        if len(properties.get('location').get('pointsOfInterest')) > 2:
+                            required_properties['TransportDistance'] = properties.get('location').get('pointsOfInterest')[2].get('distance')
+                        else:
+                            required_properties['TransportDistance'] = ""
+       
+                
+                if properties.get('netHabitableSurface'):
+                    required_properties['NetHabitableSurface'] = properties.get('netHabitableSurface')
+                else:
+                    required_properties['NetHabitableSurface'] = ""
 
-            required_properties['KitchekType'] = properties.get('kitchen').get('type')
+                if properties.get('roomCount'):
+                    required_properties['TotalRoomCount'] = properties.get('roomCount')
+                else:
+                    required_properties['TotalRoomCount'] = ""
 
-            required_properties['LivingRoomArea'] = properties.get('kitchen').get('surface')
-            required_properties['HasBalcony'] = properties.get('hasBalcony')
-            required_properties['HasGarden'] = properties.get('hasGarden')
-            required_properties['GardenArea'] = properties.get('gardenSurface')
-            required_properties['NumberOfToilets'] = properties.get('specificities').get('toiletCount')
-        except:
-            print('proplem occure while reading property from the original ')
+                if properties.get('hasAttic'):
+                    required_properties['HasAttic'] = properties.get('hasAttic')
+                else:
+                    required_properties['HasAttic'] = ""          
 
-    return(required_properties)
+                if properties.get('hasBasement'):
+                    required_properties['HasBasement'] = properties.get('hasBasement')
+                else:
+                    required_properties['HasBasement'] = ""
+
+                if properties.get('hasDiningRoom'):
+                    required_properties['HasDiningRoom'] = properties.get('hasDiningRoom')
+                else:
+                    required_properties['HasDiningRoom'] = ""
+
+                if properties.get('building'):
+                    if properties.get('building').get('condition'):
+                        required_properties['BuildingCondition'] = properties.get('building').get('condition')
+                    else:
+                        required_properties['BuildingCondition'] = ""
+
+                    if properties.get('building').get('constructionYear'):
+                        required_properties['ConstructionYear'] = properties.get('building').get('constructionYear')
+                    else:
+                        required_properties['ConstructionYear'] = ""
+
+                    if properties.get('building').get('facadeCount'):
+                        required_properties['FacadeCount'] = properties.get('building').get('facadeCount')
+                    else:
+                        required_properties['FacadeCount'] = ""
+
+                if properties.get('hasLift'):
+                    required_properties['HasLift'] = properties.get('hasLift')
+                else:
+                    required_properties['HasLift'] = ""
+
+                if properties.get('constructionPermit'):
+                    if properties.get('constructionPermit').get('floodZoneType'):
+                        required_properties['FloodZoneType'] = properties.get('constructionPermit').get('floodZoneType')
+                    else:
+                        required_properties['FloodZoneType'] = ""
+
+                if properties.get('energy'):
+                    if properties.get('energy').get('heatingType'):   
+                        required_properties['HeatingType'] = properties.get('energy').get('heatingType')   
+                    else:
+                        required_properties['HeatingType'] = ""
+
+                    if properties.get('energy').get('hasDoubleGlazing'):   
+                        required_properties['IsDoubleGlaze'] = properties.get('energy').get('hasDoubleGlazing')   
+                    else:
+                        required_properties['IsDoubleGlaze'] = ""
 
 
+                if properties.get('kitchen'):
+                    if properties.get('kitchen').get('type'):   
+                        required_properties['KitchekType'] = properties.get('kitchen').get('type')   
+                    else:
+                        required_properties['KitchekType'] = ""
+
+                    if properties.get('kitchen').get('surface'):   
+                        required_properties['LivingRoomArea'] = properties.get('kitchen').get('surface')   
+                    else:
+                        required_properties['LivingRoomArea'] = ""
+               
+                if properties.get('hasBalcony'):
+                    required_properties['HasBalcony'] = properties.get('hasBalcony')
+                else:
+                    required_properties['HasBalcony'] = ""
+
+                if properties.get('hasGarden'):
+                    required_properties['HasGarden'] = properties.get('hasGarden')
+                else:
+                    required_properties['HasGarden'] = ""
+
+                if properties.get('gardenSurface'):
+                    required_properties['GardenArea'] = properties.get('gardenSurface')
+                else:
+                    required_properties['GardenArea'] = ""
+                # required_properties['NumberOfToilets'] = properties.get('specificities').get('toiletCount')
+        except Exception as arg:
+            log.exception(f'proplem occure in get_property function while reading property from {url_property}')
+        else: 
+            return(required_properties)
+
+#########################################################
 def iterate_urls_toget_properties(list_urls):
     count = 0
-    batch_len = 10
+    batch_len = 8
     isFinished = False
-    while count < len(list_urls and not isFinished):
-        if count + 10 < len(list_urls):
-            batch_list_url = list_urls[count:count+10]            
-            count+=10
-        else:
-            remaining_count = len(list_urls)-count
-            batch_list_url = list_urls[count: count+remaining_count]
-            count+=remaining_count
-            isFinished=True
-
-        list_property_dict=[]
-        with ThreadPoolExecutor() as pool:
-            list_property_dict = list(pool.map(get_property, batch_list_url))
-        if len(list_property_dict): 
+    list_property_dict=[]
+    try:
+        while count < len(list_urls) and not isFinished:
+            if count + batch_len < len(list_urls):
+                batch_list_url = list_urls[count:count+batch_len]            
+                count+=batch_len
+            else:
+                remaining_count = len(list_urls)-count
+                batch_list_url = list_urls[count: count+remaining_count]
+                count+=remaining_count
+                isFinished=True
+            
             with ThreadPoolExecutor() as pool:
-                status = pool.map(save_data, list_property_dict) 
-        else:
-            print("nothing to save for this batch of links")
+                list_ = list(pool.map(get_property, batch_list_url))
+            list_property_dict.extend(list_)
+
+    except Exception as arg:
+            log.exception('Problem occured iterating on urls to get property of links')
+    else:
+            return list_property_dict
 
 
-def save_data (list_properties_dict, dict_writer):
-    for property_dict in list_properties_dict:
-        values = property_dict.values()
-        dict_writer.writerow(values)
+
+######################################################
+#immoweb home page "https://www.immoweb.be/en/search/house/for-sale?countries=BE"
+def get_sitemap_info(home_page):
+    tree = sitemap_tree_for_homepage(home_page)
+    urls = [page.url for page in tree.all_pages()]
+    print(len(urls), urls[0])
+  
+
+########################################################
+def get_sitemap(link):
+    '''
+    The function get the recent sitemap from the given link
+    and stores it to file
+    
+    '''
+    r =requests.get(link)
+    soup = BeautifulSoup(r.text)
+    sites = soup.find_all('sitemap')
+    file = open('C:\BeCode\LocalRepos\sitemapImo.txt', 'w')        
+    for i in range(3):
+        sitemap = sites[i].find('loc').text
+        file.write(sitemap + '\n')
+        print(sitemap)
+    file.close()
 
 
-def save_links():
+###########################################################
+def fetch_propertylinks_fromSiteMap():
     '''
     this function collects all the pages to search for House/Appartment 
-    and save all the page link to the file which will be used later 
+    from sitemap files
+
     '''
-    for page_number in range(300):
-        page_url = f"https://www.immoweb.be/en/search/house/for-sale?countries=BE&page={page_number+1}&orderBy=relevance"
-        r = requests.get(page_url)
-        soup = BeautifulSoup(r.text, 'html.parser')
-        links_list = soup.find_all('li', class_='search-result')
-        print(links_list)
-        break
+    links = []
+    with open('C:\BeCode\LocalRepos\documents\sitemapImo.txt', 'r') as f:
+        sitemap = f.readline()
+        # xml = requests.get(sitemap)
+        xml = open('C:/BeCode/LocalRepos/documents/classifieds-001_part.xml', 'r')
+        soup = BeautifulSoup(xml, features="lxml")
+        
+        urls = soup.find_all('url')
+        for url in urls:
+            loc = url.find('loc').text
+            if 'https://www.immoweb.be/en' in loc:
+                links.append(loc)
+            
+    return links
 
+#######################################################
+def export_dataframe(list_data, file_):
+    '''
+    This function accepts list of dictionaries and 
+    export the dataframe to the given file
 
-   
+    '''
+    df = pd.DataFrame.from_dict(list_data, )
+    # df.drop_duplicates()
+    df.to_csv(file_, index=False)
+    print('Properties saved to file')
 
+#######################################################
 def start_gathering_data():
-    done = save_links()
-    if done:
-        links = []
-        with open("property_links.txt") as file:
-            lines = file.readlines()
-            links = [line.rstrip() for line in lines]
+    '''
+    This function starts the process of scraping the page, gathering data
+    and finally call the function to export the data into file
+    '''
 
-        if len(links) > 0:
-            f = open("house_price_predict.csv", "w")
-            header = ['locality', 'type_of_property' ,'subtype_of_property' ,'price' ,'type_of_sale' ,'number_of_rooms','living_area','is_fully_equipped_kitchen' ,is_furnished,is_open_fire,
-            'has_terrace','terrace_area','has_garden','garden_area', 'surface_of_the_land','number_of_facades', 'swimming_pool', 'state_of_the_building']
-            dict_writer = DictWriter(f, header, delimiter=",")
-            iterate_urls_toget_properties(links, dict_writer)
-
-
-
-
-
-# Test for save links to file function
-save_links()
+    print("Start getting links from sitemap")
+    links = fetch_propertylinks_fromSiteMap()
+    if len(links) > 0:
+        print("links are successfully read and started to get properties")
+        total_list_property = iterate_urls_toget_properties(links)
+        if total_list_property and len(total_list_property) > 0: 
+            print(f' a total of {len(total_list_property)} found and exporting them to a given file')
+            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data2.csv')
+        else:
+            print("list of properties are empty, nothing to export")
 
 
-# Test for get_property function
-# test_url = 'https://www.immoweb.be/en/classified/house/for-sale/ans/4430/10147032?searchId=633bf0a6dcebd'
-# # session_param = requests.Session()
-# home_property = get_property(test_url)
-# print(home_property)
+
+def main():
+    start_gathering_data()
+
+if __name__ == '__main__':
+    main()
