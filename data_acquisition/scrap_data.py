@@ -1,13 +1,13 @@
-# import itertools
 import json
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
+from price_parser import Price
 import logging as log
-# from selenium import webdriver
-# from selenium.webdriver.common.keys import Keys
 from concurrent.futures import ThreadPoolExecutor
 from usp.tree import sitemap_tree_for_homepage
 import pandas as pd
+
+
 
 ###################################################################
 def get_property(url_property):
@@ -15,7 +15,7 @@ def get_property(url_property):
     try:
         req = requests.get(url_property)
         content = req.text
-        soup = BeautifulSoup(content, 'html.parser')    
+        soup = bs(content, 'html.parser')    
         scripts = soup.findAll('script', type='text/javascript') 
         properties = ""
         for script in scripts:
@@ -28,12 +28,12 @@ def get_property(url_property):
             log.exception('problem occured in get_property function while scraping the page')
 
     
-    required_properties = filter_out_dictionary(all_property_dict)
+    required_properties = filter_out_dictionary(all_property_dict, url_property)
     return required_properties
 
 
 ###########################################################
-def filter_out_dictionary(all_property_dict):
+def filter_out_dictionary(all_property_dict, url_property):
     '''
     This function constructs a dictionary which contains only required information
      from the original dictionary and returns the new filtered dictionary.
@@ -43,7 +43,9 @@ def filter_out_dictionary(all_property_dict):
         try:            
             properties = all_property_dict.get('property')
             property_type = properties.get('type')
-            if property_type=="APARTMENT" or property_type=="HOUSE":
+            transactionType = all_property_dict.get('transaction').get('type')
+            if (property_type=="APARTMENT" or property_type == "HOUSE") and transactionType == 'FOR_SALE':
+
                 required_properties['ID'] = all_property_dict.get('id')
                 required_properties['Type'] = property_type
 
@@ -51,6 +53,24 @@ def filter_out_dictionary(all_property_dict):
                     required_properties['Sub type'] = properties.get('subtype')
                 else:
                     required_properties['Sub type'] = ""
+
+                price=""
+                if all_property_dict.get('price'):
+                    if all_property_dict.get('price').get('mainValue'):
+                        price  = all_property_dict.get('price').get('mainValue')
+                    else:
+                        price = ""
+                    
+                    if price == "" and all_property_dict.get('price').get('mainDisplayPrice'):
+                        price = Price.fromstring(all_property_dict.get('price').get('mainDisplayPrice')).amount
+                required_properties['Price'] = price
+
+
+
+                if properties.get('netHabitableSurface'):
+                    required_properties['NetHabitableSurface(msq)'] = properties.get('netHabitableSurface')
+                else:
+                    required_properties['NetHabitableSurface(msq)'] = properties.get('netHabitableSurface')                
                 
                 if properties.get('bedroomCount'):
                     required_properties['BedroomCount'] = properties.get('bedroomCount')
@@ -99,15 +119,13 @@ def filter_out_dictionary(all_property_dict):
                         required_properties['HasSeaView'] = ""
 
                     if properties.get('location').get('pointsOfInterest'):
-                        if properties.get('location').get('pointsOfInterest')[0].get('distance'):
-                            required_properties['SchoolDistance'] = properties.get('location').get('pointsOfInterest')[0].get('distance')
-                        else:
-                            required_properties['SchoolDistance'] = ""
-
-                        if len(properties.get('location').get('pointsOfInterest')) > 2:
-                            required_properties['TransportDistance'] = properties.get('location').get('pointsOfInterest')[2].get('distance')
-                        else:
-                            required_properties['TransportDistance'] = ""
+                        for i in range(len(properties.get('location').get('pointsOfInterest'))):
+                            if properties.get('location').get('pointsOfInterest')[i]['type'] == 'SCHOOL':
+                                required_properties['SchoolDistance'] = properties.get('location').get('pointsOfInterest')[i].get('distance')
+                            elif properties.get('location').get('pointsOfInterest')[i]['type'] == 'SHOPS':
+                                required_properties['ShopDistance'] = properties.get('location').get('pointsOfInterest')[i].get('distance')
+                            elif properties.get('location').get('pointsOfInterest')[i]['type'] == 'TRANSPORT':
+                                required_properties['TransportDistance'] = properties.get('location').get('pointsOfInterest')[i].get('distance')
        
                 
                 if properties.get('netHabitableSurface'):
@@ -224,7 +242,8 @@ def iterate_urls_toget_properties(list_urls):
             
             with ThreadPoolExecutor() as pool:
                 list_ = list(pool.map(get_property, batch_list_url))
-            list_property_dict.extend(list_)
+
+            list_property_dict.extend(list(filter(None, list_)))
 
     except Exception as arg:
             log.exception('Problem occured iterating on urls to get property of links')
@@ -235,6 +254,7 @@ def iterate_urls_toget_properties(list_urls):
 
 ######################################################
 #immoweb home page "https://www.immoweb.be/en/search/house/for-sale?countries=BE"
+#https://www.immoweb.be/en/search/house-and-apartment/for-sale?countries=BE
 def get_sitemap_info(home_page):
     tree = sitemap_tree_for_homepage(home_page)
     urls = [page.url for page in tree.all_pages()]
@@ -249,7 +269,7 @@ def get_sitemap(link):
     
     '''
     r =requests.get(link)
-    soup = BeautifulSoup(r.text)
+    soup = bs(r.text)
     sites = soup.find_all('sitemap')
     file = open('C:\BeCode\LocalRepos\sitemapImo.txt', 'w')        
     for i in range(3):
@@ -267,12 +287,13 @@ def fetch_propertylinks_fromSiteMap():
 
     '''
     links = []
-    with open('C:\BeCode\LocalRepos\documents\sitemapImo.txt', 'r') as f:
-        sitemap = f.readline()
+    # with open('C:\BeCode\LocalRepos\documents\sitemapImo.txt', 'r') as f:
+    #     sitemap = f.readline()
         # xml = requests.get(sitemap)
-        xml = open('C:/BeCode/LocalRepos/documents/test_sitemap.xml', 'r')
-        soup = BeautifulSoup(xml, features="lxml")
-        
+    for i in range(3):
+        xml = open(f'C:/BeCode/LocalRepos/documents/Immo_sitemaps/New folder/classifieds-00{i}.xml', 'r')
+        #xml = open('C:/BeCode/LocalRepos/documents/classifieds-001_part.xml', 'r')
+        soup = bs(xml, features="lxml")        
         urls = soup.find_all('url')
         for url in urls:
             loc = url.find('loc').text
@@ -281,6 +302,7 @@ def fetch_propertylinks_fromSiteMap():
             
     return links
 
+
 #######################################################
 def export_dataframe(list_data, file_):
     '''
@@ -288,11 +310,12 @@ def export_dataframe(list_data, file_):
     export the dataframe to the given file
 
     '''
-    df = pd.DataFrame.from_dict(list(filter(None, list_data)))
+    df = pd.DataFrame.from_dict(list_data)
  
     # df.drop_duplicates()
     df.to_csv(file_, index=False)
     print('Properties saved to file')
+
 
 #######################################################
 def start_gathering_data():
@@ -307,16 +330,16 @@ def start_gathering_data():
         print("links are successfully read and started to get properties")
         total_list_property = iterate_urls_toget_properties(links)
         if total_list_property and len(total_list_property) > 0: 
-
             print(f' a total of {len(total_list_property)} found and exporting them to a given file')
-            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data2.csv')
+            #  'a total of 15639 found and exporting them to a given file
+            #    Properties saved to file'
+            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_1to3.csv')
         else:
             print("list of properties are empty, nothing to export")
-
-
 
 def main():
     start_gathering_data()
 
 if __name__ == '__main__':
     main()
+
