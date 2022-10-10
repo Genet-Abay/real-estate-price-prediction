@@ -25,7 +25,7 @@ def get_property(url_property):
                 all_property_dict = json.loads(text)
                 break
     except Exception as arg:
-            log.exception('problem occured in get_property function while scraping the page')
+            log.exception('problem occured in get_property function while scraping the page  '  + arg)
 
     
     required_properties = filter_out_dictionary(all_property_dict, url_property)
@@ -219,9 +219,11 @@ def filter_out_dictionary(all_property_dict, url_property):
                     required_properties['GardenArea'] = ""
                 # required_properties['NumberOfToilets'] = properties.get('specificities').get('toiletCount')
         except Exception as arg:
-            log.exception(f'proplem occure in filter_out_dictionary function while reading property from {url_property}')
+            log.exception(f'proplem occure in filter_out_dictionary function while reading property from {url_property} '  + arg)
         else: 
             return(required_properties)
+
+
 
 #########################################################
 def iterate_urls_toget_properties(list_urls):
@@ -246,7 +248,7 @@ def iterate_urls_toget_properties(list_urls):
             list_property_dict.extend(list(filter(None, list_)))
 
     except Exception as arg:
-            log.exception('Problem occured iterating on urls to get property of links')
+            log.exception('Problem occured iterating on urls to get property of links' + arg)
     else:
             return list_property_dict
 
@@ -291,7 +293,7 @@ def fetch_propertylinks_fromSiteMap():
     #     sitemap = f.readline()
         # xml = requests.get(sitemap)
     for i in range(3):
-        xml = open(f'C:/BeCode/LocalRepos/documents/Immo_sitemaps/New folder/classifieds-00{i}.xml', 'r')
+        xml = open(f'C:/BeCode/LocalRepos/documents/Immo_sitemaps/classifieds-00{i+3}.xml', 'r')
         #xml = open('C:/BeCode/LocalRepos/documents/classifieds-001_part.xml', 'r')
         soup = bs(xml, features="lxml")        
         urls = soup.find_all('url')
@@ -333,7 +335,7 @@ def start_gathering_data():
             print(f' a total of {len(total_list_property)} found and exporting them to a given file')
             #  'a total of 15639 found and exporting them to a given file
             #    Properties saved to file'
-            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_1to3.csv')
+            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_3to5.csv')
         else:
             print("list of properties are empty, nothing to export")
 
