@@ -63,9 +63,8 @@ def filter_out_dictionary(all_property_dict, url_property):
                     
                     if price == "" and all_property_dict.get('price').get('mainDisplayPrice'):
                         price = Price.fromstring(all_property_dict.get('price').get('mainDisplayPrice')).amount
+
                 required_properties['Price'] = price
-
-
 
                 if properties.get('netHabitableSurface'):
                     required_properties['NetHabitableSurface(msq)'] = properties.get('netHabitableSurface')
@@ -82,6 +81,11 @@ def filter_out_dictionary(all_property_dict, url_property):
                         required_properties['Province'] = properties.get('location').get('province')
                     else:
                         required_properties['Province'] = ""
+
+                    if properties.get('location').get('locality'):
+                        required_properties['locality'] = properties.get('location').get('locality')
+                    else:
+                        required_properties['locality'] = ""
 
                     if properties.get('location').get('region'):
                         required_properties['Region'] = properties.get('location').get('region')
@@ -292,8 +296,8 @@ def fetch_propertylinks_fromSiteMap():
     # with open('C:\BeCode\LocalRepos\documents\sitemapImo.txt', 'r') as f:
     #     sitemap = f.readline()
         # xml = requests.get(sitemap)
-    for i in range(3):
-        xml = open(f'C:/BeCode/LocalRepos/documents/Immo_sitemaps/classifieds-00{i+3}.xml', 'r')
+    for i in range(5):
+        xml = open(f'C:/BeCode/LocalRepos/documents/Immo_sitemaps/classifieds-0{i+25}.xml', 'r')
         #xml = open('C:/BeCode/LocalRepos/documents/classifieds-001_part.xml', 'r')
         soup = bs(xml, features="lxml")        
         urls = soup.find_all('url')
@@ -335,7 +339,7 @@ def start_gathering_data():
             print(f' a total of {len(total_list_property)} found and exporting them to a given file')
             #  'a total of 15639 found and exporting them to a given file
             #    Properties saved to file'
-            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_3to5.csv')
+            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_25to29.csv')
         else:
             print("list of properties are empty, nothing to export")
 
