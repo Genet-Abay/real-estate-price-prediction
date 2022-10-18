@@ -15,7 +15,7 @@ part and the last one is the test and deployment part.
 
 	
 	<p float="left">
-	  <img src="resources/price_overRegions_violin.png" width="400" height="250" />
-      <img src="resources/rlnship_priceNhabitablearea_scatterplot.png" width="400" height=270/> 
+	  <img src="resources/price_overRegions_violin.png" width="600" height="250" />
+      <img src="resources/rlnship_priceNhabitablearea_scatterplot.png" width="600" height=250/> 
      
     </p>
