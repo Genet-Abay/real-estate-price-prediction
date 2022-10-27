@@ -5,6 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import metrics as mt
 
+from data_acquisition import scrap_data
+
 
 
 def get_iqr_values(df_in, col_name):
@@ -129,8 +131,9 @@ def training_model(df):
 
 
 
-def main(data= r'C:\BeCode\LocalRepos\documents\real_estate_data_25to29.csv'):
-    df = pd.read_csv(data)
+def main():
+    path_to_data = scrap_data.start_gathering_data()
+    df = pd.read_csv(path_to_data)
     df = clean_data(df)
     df = encoding_categorical_features(df)
     model, score = training_model(df)
