@@ -19,3 +19,11 @@ part and the last one is the test and deployment part.
 	  <img src="resources/price_overRegions_violin.png" width="600" height="270" />
       <img src="resources/rlnship_priceNhabitablearea_scatterplot.png" width="600" height=250/>    
     </p>
+	
+* Model creation
+
+   The model creation part, I start with organizing the data so that it is suitable for machine learning models. Categorical values are encoded(binaryencoding and onehot encoding), numerical values are standardized. After making the data ready for the model, I have tried linear regression model and random forest regressor. Random forest regressor is then choosed as it outperforms linear regression model with r2 accuracy of65% for all the properties(houses and apartments). The model also scores 69% accuracy when applied only on the apartments and 58% only for houses.
+   
+   <p float="left">
+	  <img src="resources/randomforestScore.png" width="600" height="270" />   
+    </p>
