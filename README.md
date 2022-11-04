@@ -36,7 +36,7 @@ part and the last one is the test and deployment part.
 
 ## Prerequisites
  
-If docker is used all requred libraries will be handled by docker. If app.py is used NumPy, Pandas, matplotlib and scikit-learn and python 3.10 are requred.
+If docker is used all requred libraries will be handled by docker. If app.py is used NumPy, Pandas, scikit-learn and python 3.10 are requred.
  
  
 ## Usage
