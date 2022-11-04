@@ -36,35 +36,36 @@ part and the last one is the test and deployment part.
 
 ## Prerequisites
  
-     If docker is used all requred libraries will be handled by docker. If app.py is used NumPy, Pandas, matplotlib and scikit-learn and python 3.10 are requred.
+If docker is used all requred libraries will be handled by docker. If app.py is used NumPy, Pandas, matplotlib and scikit-learn and python 3.10 are requred.
  
  
 ## Usage
-     Crate docker image from docker file and run the docker image to use the application.
-	 It can also be used by running app.py in the deplo folder.
-	 ```
-		> python3 main.py 
+Crate docker image from docker file and run the docker image to use the application. 
+It can also be used by running app.py in the deplo folder.
+	```
+	> python3 main.py 
 
-		OR
+	OR
 
-		> python main.py 
+	> python main.py 
 
-		OR
+	OR
 
-		> py main.py		```
+	> py main.py		
+	```
       
  
 ## Input
  
-      Input should be given in a python dictionary format as the example bellow:
+Input should be given in a python dictionary format as the example bellow:
 	  
-	  [{"Type": "APATMENT", "Sub type":"MIXED_USE_BUILDING","NetHabitableSurface(msq)":1100, "BedroomCount":3, "Province":"LiÃ¨ge", "locality":"Liege", "Region":"Wallonie", "PostCode":"4020", "HasBasement":"TRUE", "BuildingCondition":"GOOD","FacadeCount":3, "HasLift":"False", "FloodZoneType":"NON_FLOOD_ZONE", "HeatingType":"GAS", "IsDoubleGlaze":"TRUE", "HasGarden":"False", "KitchekType":"HYPER_EQUIPPED", "BuildingAge":90}]
+	[{"Type": "APATMENT", "Sub type":"MIXED_USE_BUILDING","NetHabitableSurface(msq)":1100, "BedroomCount":3, "Province":"LiÃ¨ge", "locality":"Liege", "Region":"Wallonie", "PostCode":"4020", "HasBasement":"TRUE", "BuildingCondition":"GOOD","FacadeCount":3, "HasLift":"False", "FloodZoneType":"NON_FLOOD_ZONE", "HeatingType":"GAS", "IsDoubleGlaze":"TRUE", "HasGarden":"False", "KitchekType":"HYPER_EQUIPPED", "BuildingAge":90}]
  
-## Input
+## Output
   
-      Output is given in json format like 
+Output is json format like this:
 	  
-	    {"prediction": 435851.78571428574}
+	{"prediction": 435851.78571428574}
 		
 		
 		
