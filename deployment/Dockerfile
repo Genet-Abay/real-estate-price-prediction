@@ -10,6 +10,9 @@ ENV PYTHONUNBUFFERED=1
 
 RUN mkdir /app
 COPY . /app
+# COPY ./deployment/app.py /app/app.py
+# COPY ./deployment/model.pkl /app/model.pkl
+# COPY ./deployment/requirements.txt /app/requirements.txt
 WORKDIR /app
 
 # Install dependencies

@@ -24,7 +24,7 @@ def predict():
 
 
 if __name__ == '__main__':
-    with open('app/model.pkl', 'rb') as pickle_file:
+    with open('model.pkl', 'rb') as pickle_file:
         model = pickle.load(pickle_file) # Load "model.pkl"
     print ('Model loaded')
     app.run(port=5001,  debug=True)
