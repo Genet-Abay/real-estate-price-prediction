@@ -43,15 +43,15 @@ If docker is used all requred libraries will be handled by docker. If app.py is 
 Crate docker image from docker file and run the docker image to use the application. 
 It can also be used by running app.py in the deplo folder.
 	```
-	> python3 main.py 
+	> python3 /deployment/app.py 
 
 	OR
 
-	> python main.py 
+	> python /deployment/app.py 
 
 	OR
 
-	> py main.py		
+	> py /deployment/app.py 		
 	```
       
  
