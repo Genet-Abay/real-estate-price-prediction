@@ -324,12 +324,13 @@ def export_dataframe(list_data, file_):
 
 
 #######################################################
-def start_gathering_data():
+def start_gathering_data(path_data = 'C:/BeCode/LocalRepos/documents/real_estate_data_25to29.csv'):
     '''
     This function starts the process of scraping the page, gathering data
     and finally call the function to export the data into file
     '''
-
+    
+    path_to_output = path_data
     print("Start getting links from sitemap")
     links = fetch_propertylinks_fromSiteMap()
     if len(links) > 0:
@@ -339,12 +340,15 @@ def start_gathering_data():
             print(f' a total of {len(total_list_property)} found and exporting them to a given file')
             #  'a total of 15639 found and exporting them to a given file
             #    Properties saved to file'
-            export_dataframe(total_list_property, 'C:/BeCode/LocalRepos/documents/real_estate_data_25to29.csv')
+            export_dataframe(total_list_property, path_to_output)
         else:
             print("list of properties are empty, nothing to export")
 
+    return path_to_output
+
 def main():
-    start_gathering_data()
+    path_output = input('where do you want to save the outpt, give full path with name of file and set extension')    
+    start_gathering_data(path_output)
 
 if __name__ == '__main__':
     main()
