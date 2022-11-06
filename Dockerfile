@@ -1,5 +1,5 @@
 # Base image
-FROM python
+FROM python:3.10
 
 RUN mkdir docker_dir
 WORKDIR /docker_dir
