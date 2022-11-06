@@ -3,6 +3,7 @@ import numpy as np
 from flask import Flask, request, jsonify
 import pickle
 import traceback
+import os
 
 app = Flask(__name__)
 @app.route('/')
@@ -30,4 +31,4 @@ if __name__ == '__main__':
     with open('model.pkl', 'rb') as pickle_file:
         model = pickle.load(pickle_file) # Load "model.pkl"
     print ('Model loaded')
-    app.run(host='0.0.0.0', port=80)
+    app.run(debug=True, host='0.0.0.0', port=os.environ.get("PORT",  80))

@@ -41,6 +41,13 @@ If docker is used all requred libraries will be handled by docker. If app.py is 
  
 ## Usage
 Crate docker image from docker file and run the docker image to use the application. 
+
+Building docker image
+
+    docker build -t realestatepriceprediction
+
+    docker run -d -p 80:80 realestatepriceprediction
+	
 It can also be used by running app.py in the deployment folder.
 	
 	```
@@ -55,7 +62,9 @@ It can also be used by running app.py in the deployment folder.
 	> py /deployment/app.py 		
 	```
       
- 
+Test the API
+    localhost:80/docs      with the givne dictionary as an imput
+	
 ## Input
  
 Input should be given in a python dictionary format as the example bellow:

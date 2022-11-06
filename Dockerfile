@@ -3,7 +3,7 @@ FROM python
 
 RUN mkdir docker_dir
 WORKDIR /docker_dir
-COPY /deployment .
+COPY /deployment/* .
 
 # Install dependencies
 RUN pip install -r requirements.txt
