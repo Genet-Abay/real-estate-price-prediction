@@ -5,6 +5,9 @@ import pickle
 import traceback
 
 app = Flask(__name__)
+@app.route('/')
+def welcome():
+    return "Welcome to the real estate price prediction application!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -27,4 +30,4 @@ if __name__ == '__main__':
     with open('model.pkl', 'rb') as pickle_file:
         model = pickle.load(pickle_file) # Load "model.pkl"
     print ('Model loaded')
-    app.run(port=5001,  debug=True)
+    app.run(host='0.0.0.0', port=80)
