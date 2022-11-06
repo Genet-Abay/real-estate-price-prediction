@@ -45,6 +45,8 @@ Crate docker image from docker file and run the docker image to use the applicat
 Building docker image
 
     docker build -t realestatepriceprediction
+	
+Running docker image
 
     docker run -d -p 80:80 realestatepriceprediction
 	
