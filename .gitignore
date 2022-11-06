@@ -37,7 +37,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-*.txt
+InformationToConsider_dataanalysis.txt
 
 # Unit test / coverage reports
 htmlcov/
