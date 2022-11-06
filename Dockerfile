@@ -3,9 +3,12 @@ FROM python
 
 RUN mkdir docker_dir
 WORKDIR /docker_dir
-COPY /deployment/* .
+COPY /requirements.txt .
+COPY /app.py .
+COPY /model.pkl .
 
 # Install dependencies
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Run the application
