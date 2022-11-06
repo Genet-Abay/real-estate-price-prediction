@@ -65,7 +65,8 @@ It can also be used by running app.py in the deployment folder.
 	```
       
 Test the API
-    localhost:80/docs      with the givne dictionary as an imput
+    localhost:80/prediction
+	
 	
 ## Input
  
