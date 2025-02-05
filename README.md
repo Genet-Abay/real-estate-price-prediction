@@ -91,7 +91,3 @@ Free license
 Genet Abay Shiferaw: genetabay.s@gmail.com
 
 Repository link : https://github.com/Genet-Abay/real-estate-price-prediction
-
-## Acknowledgments
-
-BeCode Arai4 AI coaches(Chrysanthi and Louis)
